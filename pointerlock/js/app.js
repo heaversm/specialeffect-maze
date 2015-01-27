@@ -5,13 +5,12 @@ var controls;
 var maze;
 
 var gui;
+var guiConfig = {};
+
 
 var objects = [];
 
 var raycaster;
-
-var blocker = document.getElementById( 'blocker' );
-var instructions = document.getElementById( 'instructions' );
 
 // http://www.html5rocks.com/en/tutorials/pointerlock/intro/
 
@@ -19,29 +18,29 @@ var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement
 
 var element = document.body;
 
-var guiConfig = [];
+
 
 var config = {
-  mazeScale: 100,
-  doCollisionDetection: false,
-  recursiveCollisions: false,
+  mazeScale: 100, //no gui
+  doCollisionDetection: false, //no gui
+  recursiveCollisions: false, //no gui
   fogColor: '#4ff904',
   lightColor1: '#ffffff',
   lightColor2: '#eeeeee',
   lightIntensity: .75,
   checkerColor1: '#ffffff',
   checkerColor2: '#000000',
-  checkerFucker: false,
-  solidFloor: true,
+  checkerFucker: false, //no gui
+  solidFloor: false, //no gui
   bgColor: '#3dc800',
   wallColor: '#000000',
-  castShadow: true,
+  castShadow: true, //no gui
   shadowPositionX: 0,
   shadowPositionY: 500,
   shadowPositionZ: 1500,
   floorColor1: '#ffffff',
   floorColor2: '#eeeeee',
-  floorSpecular: '#ff0000',
+  floorSpecular: '#57be57',
   floorShininess: 5
 }
 
@@ -323,59 +322,72 @@ function loadModelData(){
 
 function addGUI(){
   gui = new dat.GUI();
-  guiConfig[0] = gui.addColor(config,'fogColor');
-  guiConfig[0].onChange(function(value){
+
+  guiConfig.skyFolder = gui.addFolder('Sky');
+  guiConfig.mazeFolder = gui.addFolder('Maze');
+
+  guiConfig.fogColor = guiConfig.skyFolder.addColor(config,'fogColor');
+  guiConfig.fogColor.onChange(function(value){
     scene.fog.color.set(value);
   });
-  guiConfig[1] = gui.add(config,'lightIntensity',0,1).step(.05);
-  guiConfig[1].onFinishChange(function(value){
+
+  guiConfig.lightIntensity = guiConfig.skyFolder.add(config,'lightIntensity',0,1).step(.05);
+  guiConfig.lightIntensity.onFinishChange(function(value){
     light.intensity = value;
   });
-  guiConfig[2] = gui.addColor(config,'lightColor1');
-  guiConfig[2].onChange(function(value){
+  guiConfig.lightColor1 = guiConfig.skyFolder.addColor(config,'lightColor1');
+  guiConfig.lightColor1.onChange(function(value){
     light.color.set(value);
   });
-  guiConfig[3] = gui.addColor(config,'lightColor2');
-  guiConfig[3].onChange(function(value){
+  guiConfig.lightColor2 = guiConfig.skyFolder.addColor(config,'lightColor2');
+  guiConfig.lightColor2.onChange(function(value){
     light.groundColor.set(value);
   });
-  guiConfig[4] = gui.addColor(config,'checkerColor1');
-  guiConfig[4].onChange(function(value){
-    mesh.material.map = new CheckerBoardTexture(value, config.checkerColor2, 800, 800);
-  });
-  guiConfig[5] = gui.addColor(config,'checkerColor2');
-  guiConfig[5].onChange(function(value){
-    if (config.checker)
-    mesh.material.map = new CheckerBoardTexture(config.checkerColor1, value, 800, 800);
-  });
-  guiConfig[6] = gui.addColor(config,'bgColor');
-  guiConfig[6].onChange(function(value){
+  guiConfig.bgColor = guiConfig.skyFolder.addColor(config,'bgColor');
+  guiConfig.bgColor.onChange(function(value){
     renderer.setClearColor( value );
   });
-  guiConfig[7] = gui.addColor(config,'wallColor');
-  guiConfig[7].onChange(function(value){
+  guiConfig.shadowPositionX = guiConfig.skyFolder.add(config,'shadowPositionX',0,2000).step(10);
+  guiConfig.shadowPositionX.onChange(function(value){
+    changeShadowPosition();
+  });
+  guiConfig.shadowPositionY = guiConfig.skyFolder.add(config,'shadowPositionY',0,2000).step(10);
+  guiConfig.shadowPositionY.onChange(function(value){
+    changeShadowPosition();
+  });
+  guiConfig.shadowPositionZ = guiConfig.skyFolder.add(config,'shadowPositionZ',0,2000).step(10);
+  guiConfig.shadowPositionZ.onChange(function(value){
+    changeShadowPosition();
+  });
+
+  guiConfig.checkerColor1 = guiConfig.mazeFolder.addColor(config,'checkerColor1');
+  guiConfig.checkerColor1.onChange(function(value){
+    mesh.material.map = new CheckerBoardTexture(config.checkerColor1, config.checkerColor2, 800, 800);
+  });
+  guiConfig.checkerColor2 = guiConfig.mazeFolder.addColor(config,'checkerColor2');
+  guiConfig.checkerColor2.onChange(function(value){
+    mesh.material.map = new CheckerBoardTexture(config.checkerColor1, config.checkerColor2, 800, 800);
+  });
+  guiConfig.wallColor = guiConfig.mazeFolder.addColor(config,'wallColor');
+  guiConfig.wallColor.onChange(function(value){
     wallMaterial.color.set(value);
   });
-  guiConfig[8] = gui.add(config,'shadowPositionX',0,2000).step(10);
-  guiConfig[9] = gui.add(config,'shadowPositionY',0,2000).step(10);
-  guiConfig[10] = gui.add(config,'shadowPositionZ',0,2000).step(10);
-
-  for (var i=8;i<11;i++){
-    guiConfig[i].onChange(function(value){
-      changeShadowPosition();
-    });
-  }
-
-  guiConfig[11] = gui.addColor(config,'floorColor1');
-  guiConfig[12] = gui.addColor(config,'floorColor2');
-  guiConfig[13] = gui.addColor(config,'floorSpecular');
-  guiConfig[14] = gui.add(config,'floorShininess',0,500).step(5);
-
-  for (var j=11;j<15;j++){
-    guiConfig[j].onChange(function(value){
-      changeFloorColor();
-    });
-  }
+  guiConfig.floorColor1 = guiConfig.mazeFolder.addColor(config,'floorColor1');
+  guiConfig.floorColor1.onChange(function(value){
+    changeFloorColor();
+  });
+  guiConfig.floorColor2 = guiConfig.mazeFolder.addColor(config,'floorColor2');
+  guiConfig.floorColor2.onChange(function(value){
+    changeFloorColor();
+  });
+  guiConfig.floorSpecular = guiConfig.mazeFolder.addColor(config,'floorSpecular');
+  guiConfig.floorSpecular.onChange(function(value){
+    changeFloorColor();
+  });
+  guiConfig.floorShininess = guiConfig.mazeFolder.add(config,'floorShininess',0,500).step(5);
+  guiConfig.floorShininess.onChange(function(value){
+    changeFloorColor();
+  });
 
 }
 
